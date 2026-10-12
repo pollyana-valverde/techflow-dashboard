@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Dashboard da TechFlow para acompanhar projetos, equipes e indicadores.">
+  <title>TechFlow | Dashboard</title>
+
+  <!-- Aplica o tema salvo antes da página aparecer, evitando que ela "pisque" no tema errado -->
+  <script>
+    (function () {
+      var tema = 'system';
+      try { tema = localStorage.getItem('techflow-tema') || 'system'; } catch (erro) {}
+      var sistemaEscuro = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      if (tema === 'dark' || (tema === 'system' && sistemaEscuro)) {
+        document.documentElement.classList.add('dark');
+      }
+    })();
+  </script>
+
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class', // o modo escuro é controlado pela classe "dark" no <html>
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif']
+          }
+        }
+      }
+    };
+  </script>
+
+  <!-- Fonte -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Estilos complementares -->
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+
+<body class="min-h-screen bg-slate-50 font-sans text-slate-800 antialiased transition-colors duration-300 dark:bg-slate-950 dark:text-slate-200">
+
+  <!-- ===================== OVERLAY DA SIDEBAR (somente mobile) ===================== -->
+  <div id="overlay-sidebar" class="invisible fixed inset-0 z-30 bg-slate-900/50 opacity-0 backdrop-blur-sm transition-all duration-300 ease-out lg:hidden"></div>
+
+  <!-- ===================== SIDEBAR ===================== -->
+  <aside id="sidebar" aria-label="Menu principal"
+    class="fixed inset-y-0 left-0 z-40 flex w-72 -translate-x-full flex-col border-r border-slate-200 bg-white transition-transform duration-300 ease-in-out lg:translate-x-0 dark:border-slate-800 dark:bg-slate-900">
+
+    <!-- Logo -->
+    <div class="flex h-16 items-center justify-between px-6">
+      <a href="#" class="flex items-center gap-2.5">
+        <span class="grid h-9 w-9 place-items-center rounded-xl bg-gradient-to-br from-indigo-500 via-violet-500 to-fuchsia-500 text-lg font-extrabold text-white shadow-lg shadow-violet-500/30">T</span>
+        <span class="text-lg font-extrabold tracking-tight text-slate-900 dark:text-white">Tech<span class="text-violet-600 dark:text-violet-400">Flow</span></span>
+      </a>
+      <button id="fechar-sidebar" type="button" aria-label="Fechar menu"
+        class="rounded-lg p-2 text-slate-500 transition-colors duration-200 hover:bg-slate-100 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-violet-500 active:scale-95 lg:hidden dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white">
+        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
+      </button>
+    </div>
+
+    <!-- Navegação -->
+    <nav class="flex-1 overflow-y-auto px-4 py-4">
+      <p class="mb-2 px-3 text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Menu</p>
+      <ul class="flex flex-col gap-1">
+        <li>
+          <a href="#" aria-current="page" data-link-sidebar
+            class="group flex items-center gap-3 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-500 px-3 py-2.5 text-sm font-semibold text-white shadow-md shadow-violet-500/25 transition-all duration-200">
+            <svg class="h-5 w-5 transition-transform duration-200 group-hover:scale-110" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" /></svg>
+            Dashboard
+          </a>
+        </li>
+        <li>
+          <a href="#projetos" data-link-sidebar
+            class="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-600 transition-all duration-200 hover:bg-violet-50 hover:text-violet-700 focus:outline-none focus:ring-2 focus:ring-violet-500 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white">
+            <svg class="h-5 w-5 text-slate-400 transition-all duration-200 group-hover:scale-110 group-hover:text-violet-600 dark:group-hover:text-violet-400" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.75V12A2.25 2.25 0 0 1 4.5 9.75h15A2.25 2.25 0 0 1 21.75 12v.75m-8.69-6.44-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z" /></svg>
+            Projetos
+            <span class="ml-auto rounded-full bg-violet-100 px-2 py-0.5 text-xs font-semibold text-violet-700 dark:bg-violet-500/15 dark:text-violet-300">12</span>
+          </a>
+        </li>
+        <li>
+          <a href="#" data-link-sidebar
+            class="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-600 transition-all duration-200 hover:bg-violet-50 hover:text-violet-700 focus:outline-none focus:ring-2 focus:ring-violet-500 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white">
+            <svg class="h-5 w-5 text-slate-400 transition-all duration-200 group-hover:scale-110 group-hover:text-violet-600 dark:group-hover:text-violet-400" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
+            Tarefas
+            <span class="ml-auto rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-700 dark:bg-amber-500/15 dark:text-amber-300">47</span>
+          </a>
+        </li>
+        <li>
+          <a href="#" data-link-sidebar
+            class="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-600 transition-all duration-200 hover:bg-violet-50 hover:text-violet-700 focus:outline-none focus:ring-2 focus:ring-violet-500 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white">
+            <svg class="h-5 w-5 text-slate-400 transition-all duration-200 group-hover:scale-110 group-hover:text-violet-600 dark:group-hover:text-violet-400" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Zm-13.5 0a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z" /></svg>
+            Equipes
+          </a>
+        </li>
+        <li>
+          <a href="#" data-link-sidebar
+            class="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-600 transition-all duration-200 hover:bg-violet-50 hover:text-violet-700 focus:outline-none focus:ring-2 focus:ring-violet-500 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white">
+            <svg class="h-5 w-5 text-slate-400 transition-all duration-200 group-hover:scale-110 group-hover:text-violet-600 dark:group-hover:text-violet-400" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z" /></svg>
+            Relatórios
+          </a>
+        </li>
+        <li>
+          <a href="#" data-link-sidebar
+            class="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-600 transition-all duration-200 hover:bg-violet-50 hover:text-violet-700 focus:outline-none focus:ring-2 focus:ring-violet-500 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white">
+            <svg class="h-5 w-5 text-slate-400 transition-all duration-200 group-hover:scale-110 group-hover:text-violet-600 dark:group-hover:text-violet-400" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" /></svg>
+            Calendário
+          </a>
+        </li>
+      </ul>
+
+      <p class="mb-2 mt-6 px-3 text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Conta</p>
+      <ul class="flex flex-col gap-1">
+        <li>
+          <a href="#" data-link-sidebar
+            class="group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-600 transition-all duration-200 hover:bg-violet-50 hover:text-violet-700 focus:outline-none focus:ring-2 focus:ring-violet-500 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white">
+            <svg class="h-5 w-5 text-slate-400 transition-all duration-200 group-hover:rotate-90 group-hover:text-violet-600 dark:group-hover:text-violet-400" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-9.75 0h9.75" /></svg>
+            Configurações
+          </a>
+        </li>
+      </ul>
+    </nav>
+
+    <!-- Card de ajuda no rodapé da sidebar -->
+    <div class="p-4">
+      <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-600 via-violet-600 to-fuchsia-600 p-5 text-white">
+        <div class="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-white/10"></div>
+        <div class="absolute -bottom-8 -left-4 h-20 w-20 rounded-full bg-white/10"></div>
+        <p class="relative text-sm font-bold">Precisa de ajuda?</p>
+        <p class="relative mt-1 text-xs text-violet-100">Consulte a central de suporte da TechFlow.</p>
+        <button type="button"
+          class="relative mt-4 w-full rounded-xl bg-white/15 px-3 py-2 text-xs font-semibold backdrop-blur transition-all duration-200 hover:bg-white/25 focus:outline-none focus:ring-2 focus:ring-white active:scale-95">
+          Abrir suporte
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ===================== CONTEÚDO (empurrado para a direita no desktop) ===================== -->
+  <div class="lg:pl-72">
+
+    <!-- ===================== NAVBAR ===================== -->
+    <header class="sticky top-0 z-20 border-b border-slate-200/80 bg-white/80 backdrop-blur-lg transition-colors duration-300 dark:border-slate-800 dark:bg-slate-900/80">
+      <div class="flex flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-8 2xl:px-12">
+
+        <!-- Botão do menu e logo (somente mobile/tablet) -->
+        <div class="flex items-center gap-2 lg:hidden">
+          <button id="abrir-sidebar" type="button" aria-label="Abrir menu" aria-controls="sidebar" aria-expanded="false"
+            class="rounded-lg p-2 text-slate-600 transition-colors duration-200 hover:bg-slate-100 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-violet-500 active:scale-95 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white">
+            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" /></svg>
+          </button>
+          <a href="#" class="flex items-center gap-2">
+            <span class="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-indigo-500 via-violet-500 to-fuchsia-500 font-extrabold text-white">T</span>
+            <span class="hidden text-base font-extrabold tracking-tight text-slate-900 sm:inline dark:text-white">Tech<span class="text-violet-600 dark:text-violet-400">Flow</span></span>
+          </a>
+        </div>
+
+        <!-- Campo de pesquisa (no celular vai para uma linha própria) -->
+        <div class="order-last w-full md:order-none md:w-auto md:max-w-md md:flex-1">
+          <label for="pesquisa" class="sr-only">Pesquisar</label>
+          <div class="relative">
+            <svg class="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" /></svg>
+            <input id="pesquisa" type="search" placeholder="Pesquisar projetos, equipes ou tarefas..."
+              class="w-full rounded-xl border border-slate-200 bg-slate-100/70 py-2.5 pl-10 pr-4 text-sm text-slate-800 outline-none transition-all duration-200 placeholder:text-slate-400 hover:border-slate-300 focus:border-violet-500 focus:bg-white focus:ring-4 focus:ring-violet-500/20 dark:border-slate-700 dark:bg-slate-800/70 dark:text-slate-100 dark:hover:border-slate-600 dark:focus:bg-slate-800">
+          </div>
+        </div>
+
+        <!-- Ações da direita -->
+        <div class="flex items-center gap-2 sm:gap-3">
+
+          <!-- Seletor de tema: Light | Dark | System -->
+          <div role="group" aria-label="Tema da interface"
+            class="flex items-center gap-0.5 rounded-xl border border-slate-200 bg-slate-100 p-1 dark:border-slate-700 dark:bg-slate-800">
+            <button type="button" data-tema="light" aria-pressed="false" title="Tema claro"
+              class="flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-semibold text-slate-500 transition-all duration-200 hover:text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 active:scale-95 aria-pressed:bg-white aria-pressed:text-violet-600 aria-pressed:shadow-sm dark:text-slate-400 dark:hover:text-white dark:aria-pressed:bg-slate-700 dark:aria-pressed:text-white">
+              <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z" /></svg>
+              <span class="hidden xl:inline">Light</span>
+            </button>
+            <button type="button" data-tema="dark" aria-pressed="false" title="Tema escuro"
+              class="flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-semibold text-slate-500 transition-all duration-200 hover:text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 active:scale-95 aria-pressed:bg-white aria-pressed:text-violet-600 aria-pressed:shadow-sm dark:text-slate-400 dark:hover:text-white dark:aria-pressed:bg-slate-700 dark:aria-pressed:text-white">
+              <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.72 9.72 0 0 1 18 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 0 0 3 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 0 0 9.002-5.998Z" /></svg>
+              <span class="hidden xl:inline">Dark</span>
+            </button>
+            <button type="button" data-tema="system" aria-pressed="false" title="Seguir o sistema"
+              class="flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-semibold text-slate-500 transition-all duration-200 hover:text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 active:scale-95 aria-pressed:bg-white aria-pressed:text-violet-600 aria-pressed:shadow-sm dark:text-slate-400 dark:hover:text-white dark:aria-pressed:bg-slate-700 dark:aria-pressed:text-white">
+              <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17.25v1.007a3 3 0 0 1-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0 1 15 18.257V17.25m6-12V15a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 15V5.25m18 0A2.25 2.25 0 0 0 18.75 3H5.25A2.25 2.25 0 0 0 3 5.25m18 0V12a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 12V5.25" /></svg>
+              <span class="hidden xl:inline">System</span>
+            </button>
+          </div>
+
+          <!-- Notificações -->
+          <button type="button" aria-label="Notificações"
+            class="relative hidden rounded-xl p-2 text-slate-500 transition-all duration-200 hover:bg-slate-100 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-violet-500 active:scale-95 sm:inline-flex dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-white">
+            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" /></svg>
+            <span class="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-fuchsia-500 ring-2 ring-white dark:ring-slate-900"></span>
+          </button>
+
+          <!-- Usuário + dropdown -->
+          <div class="relative">
+            <button id="botao-usuario" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="menu-usuario"
+              class="group flex items-center gap-2.5 rounded-xl p-1 pr-1.5 transition-all duration-200 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-violet-500 active:scale-[0.98] md:pr-3 dark:hover:bg-slate-800">
+              <span class="grid h-9 w-9 place-items-center rounded-lg bg-gradient-to-br from-fuchsia-500 to-violet-600 text-sm font-bold text-white">AR</span>
+              <span class="hidden text-left md:block">
+                <span class="block text-sm font-semibold leading-tight text-slate-900 dark:text-white">Ana Ribeiro</span>
+                <span class="block text-xs text-slate-500 dark:text-slate-400">Gerente de Projetos</span>
+              </span>
+              <svg class="hidden h-4 w-4 text-slate-400 transition-transform duration-300 group-aria-expanded:rotate-180 md:block" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" /></svg>
+            </button>
+
+            <!-- Menu do dropdown -->
+            <div id="menu-usuario" role="menu"
+              class="invisible absolute right-0 mt-2 w-72 origin-top-right scale-95 rounded-2xl border border-slate-200 bg-white p-2 opacity-0 shadow-xl shadow-slate-900/10 transition-all duration-200 ease-out dark:border-slate-700 dark:bg-slate-900">
+              <div class="flex items-center gap-3 border-b border-slate-100 px-3 pb-3 pt-2 dark:border-slate-800">
+                <span class="grid h-10 w-10 place-items-center rounded-lg bg-gradient-to-br from-fuchsia-500 to-violet-600 text-sm font-bold text-white">AR</span>
+                <div>
+                  <p class="text-sm font-semibold text-slate-900 dark:text-white">Ana Ribeiro</p>
+                  <p class="text-xs text-slate-500 dark:text-slate-400">ana.ribeiro@techflow.com</p>
+                </div>
+              </div>
+
+              <div class="flex flex-col gap-0.5 py-2">
+                <a href="#" role="menuitem"
+                  class="group flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-slate-600 transition-colors duration-150 hover:bg-violet-50 hover:text-violet-700 focus:bg-violet-50 focus:outline-none dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white dark:focus:bg-slate-800">
+                  <svg class="h-4 w-4 text-slate-400 transition-colors group-hover:text-violet-600 dark:group-hover:text-violet-400" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /></svg>
+                  Meu perfil
+                </a>
+                <a href="#" role="menuitem"
+                  class="group flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-slate-600 transition-colors duration-150 hover:bg-violet-50 hover:text-violet-700 focus:bg-violet-50 focus:outline-none dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white dark:focus:bg-slate-800">
+                  <svg class="h-4 w-4 text-slate-400 transition-colors group-hover:text-violet-600 dark:group-hover:text-violet-400" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 1 1-3 0m3 0a1.5 1.5 0 1 0-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m-9.75 0h9.75" /></svg>
+                  Configurações
+                </a>
+
+                <!-- Interruptor feito com peer-checked -->
+                <label class="flex cursor-pointer items-center justify-between gap-3 rounded-lg px-3 py-2 text-sm text-slate-600 transition-colors duration-150 hover:bg-violet-50 dark:text-slate-300 dark:hover:bg-slate-800">
+                  <span>Notificações por e-mail</span>
+                  <input type="checkbox" class="peer sr-only" checked>
+                  <span class="relative h-5 w-9 shrink-0 rounded-full bg-slate-300 transition-colors duration-300 after:absolute after:left-0.5 after:top-0.5 after:h-4 after:w-4 after:rounded-full after:bg-white after:shadow after:transition-transform after:duration-300 after:ease-out peer-checked:bg-violet-600 peer-checked:after:translate-x-4 peer-focus-visible:ring-2 peer-focus-visible:ring-violet-500 dark:bg-slate-600 dark:peer-checked:bg-violet-500"></span>
+                </label>
+
+                <!-- Exemplo de estado disabled -->
+                <button type="button" role="menuitem" disabled
+                  class="flex items-center gap-3 rounded-lg px-3 py-2 text-left text-sm text-slate-600 transition-colors duration-150 hover:bg-violet-50 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent dark:text-slate-300">
+                  <svg class="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" /></svg>
+                  Trocar de conta
+                  <span class="ml-auto rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-slate-500 dark:bg-slate-800 dark:text-slate-400">Em breve</span>
+                </button>
+              </div>
+
+              <div class="border-t border-slate-100 pt-2 dark:border-slate-800">
+                <a href="#" role="menuitem"
+                  class="group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-rose-600 transition-colors duration-150 hover:bg-rose-50 focus:bg-rose-50 focus:outline-none dark:text-rose-400 dark:hover:bg-rose-500/10 dark:focus:bg-rose-500/10">
+                  <svg class="h-4 w-4 transition-transform duration-200 group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9" /></svg>
+                  Sair
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- ===================== ÁREA PRINCIPAL ===================== -->
+    <main class="mx-auto max-w-[1600px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8 2xl:px-12">
+
+      <!-- Título da página e ações -->
+      <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p class="text-sm font-medium text-violet-600 dark:text-violet-400">Visão geral</p>
+          <h1 class="mt-1 text-2xl font-extrabold tracking-tight text-slate-900 sm:text-3xl dark:text-white">Olá, Ana! Bom te ver por aqui.</h1>
+          <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Acompanhe os projetos, equipes e indicadores da TechFlow.</p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-3">
+          <button type="button" disabled title="Disponível em breve"
+            class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 transition-all duration-200 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
+            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" /></svg>
+            Exportar
+          </button>
+          <button id="botao-novo-projeto" type="button"
+            class="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-violet-500/30 transition-all duration-200 ease-out hover:-translate-y-0.5 hover:shadow-xl hover:shadow-violet-500/40 focus:outline-none focus:ring-4 focus:ring-violet-500/40 active:translate-y-0 active:scale-95">
+            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+            Novo projeto
+          </button>
+        </div>
+      </div>
+
+      <!-- ===================== CARDS DE INDICADORES ===================== -->
+      <section aria-label="Indicadores" class="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4 2xl:gap-6">
+
+        <article class="group rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-xl hover:shadow-indigo-500/10 dark:border-slate-800 dark:bg-slate-900">
+          <div class="flex items-center justify-between">
+            <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Projetos ativos</p>
+            <span class="grid h-11 w-11 place-items-center rounded-xl bg-indigo-100 text-indigo-600 transition-transform duration-300 ease-out group-hover:rotate-6 group-hover:scale-110 dark:bg-indigo-500/15 dark:text-indigo-400">
+              <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.75V12A2.25 2.25 0 0 1 4.5 9.75h15A2.25 2.25 0 0 1 21.75 12v.75m-8.69-6.44-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z" /></svg>
+            </span>
+          </div>
+          <p id="contador-ativos" class="mt-3 text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">12</p>
+          <p class="mt-1 text-xs text-slate-500 dark:text-slate-400"><span class="font-semibold text-emerald-600 dark:text-emerald-400">+3</span> desde o mês passado</p>
+        </article>
+
+        <article class="group rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-xl hover:shadow-emerald-500/10 dark:border-slate-800 dark:bg-slate-900">
+          <div class="flex items-center justify-between">
+            <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Projetos concluídos</p>
+            <span class="grid h-11 w-11 place-items-center rounded-xl bg-emerald-100 text-emerald-600 transition-transform duration-300 ease-out group-hover:rotate-6 group-hover:scale-110 dark:bg-emerald-500/15 dark:text-emerald-400">
+              <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
+            </span>
+          </div>
+          <p class="mt-3 text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">28</p>
+          <p class="mt-1 text-xs text-slate-500 dark:text-slate-400"><span class="font-semibold text-emerald-600 dark:text-emerald-400">+5</span> neste trimestre</p>
+        </article>
+
+        <article class="group rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-xl hover:shadow-amber-500/10 dark:border-slate-800 dark:bg-slate-900">
+          <div class="flex items-center justify-between">
+            <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Tarefas pendentes</p>
+            <span class="grid h-11 w-11 place-items-center rounded-xl bg-amber-100 text-amber-600 transition-transform duration-300 ease-out group-hover:rotate-6 group-hover:scale-110 dark:bg-amber-500/15 dark:text-amber-400">
+              <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
+            </span>
+          </div>
+          <p class="mt-3 text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">47</p>
+          <p class="mt-1 text-xs text-slate-500 dark:text-slate-400"><span class="font-semibold text-rose-600 dark:text-rose-400">9</span> vencem esta semana</p>
+        </article>
+
+        <article class="group rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-xl hover:shadow-fuchsia-500/10 dark:border-slate-800 dark:bg-slate-900">
+          <div class="flex items-center justify-between">
+            <p class="text-sm font-medium text-slate-500 dark:text-slate-400">Equipes</p>
+            <span class="grid h-11 w-11 place-items-center rounded-xl bg-fuchsia-100 text-fuchsia-600 transition-transform duration-300 ease-out group-hover:rotate-6 group-hover:scale-110 dark:bg-fuchsia-500/15 dark:text-fuchsia-400">
+              <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Zm-13.5 0a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z" /></svg>
+            </span>
+          </div>
+          <p class="mt-3 text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">8</p>
+          <p class="mt-1 text-xs text-slate-500 dark:text-slate-400"><span class="font-semibold text-violet-600 dark:text-violet-400">54</span> pessoas no total</p>
+        </article>
+      </section>
+
+      <!-- ===================== PROJETOS ===================== -->
+      <section id="projetos" aria-labelledby="titulo-projetos" class="mt-10">
+        <div class="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h2 id="titulo-projetos" class="text-xl font-bold tracking-tight text-slate-900 dark:text-white">Projetos em andamento</h2>
+            <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Os projetos mais recentes de todas as equipes.</p>
+          </div>
+          <a href="#" class="group inline-flex items-center gap-1 text-sm font-semibold text-violet-600 transition-colors hover:text-violet-800 focus:outline-none focus-visible:underline dark:text-violet-400 dark:hover:text-violet-300">
+            Ver todos
+            <svg class="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" /></svg>
+          </a>
+        </div>
+
+        <!-- Grid de projetos: cards com tamanhos diferentes usando col-span e row-span -->
+        <div id="grade-projetos" class="mt-5 grid grid-flow-dense auto-rows-[minmax(11rem,auto)] grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4 2xl:gap-6">
+
+          <!-- Card 1: destaque (2 colunas e 2 linhas no desktop) -->
+          <article class="group relative flex flex-col justify-between overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-600 via-violet-600 to-fuchsia-600 p-6 text-white shadow-lg shadow-violet-500/25 transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-2xl hover:shadow-violet-500/40 md:col-span-2 xl:row-span-2 lg:p-8">
+            <div class="absolute -right-16 -top-16 h-56 w-56 rounded-full bg-white/10 transition-transform duration-700 ease-out group-hover:scale-125"></div>
+            <div class="absolute -bottom-20 right-24 h-40 w-40 rounded-full bg-fuchsia-400/20 transition-transform duration-700 ease-out group-hover:scale-125"></div>
+
+            <div class="relative">
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="rounded-full bg-white/20 px-3 py-1 text-xs font-semibold backdrop-blur">Projeto em destaque</span>
+                <span class="rounded-full bg-white/20 px-3 py-1 text-xs font-semibold backdrop-blur">Mobile</span>
+                <span class="rounded-full bg-rose-500/90 px-3 py-1 text-xs font-semibold">Alta</span>
+              </div>
+              <h3 class="mt-5 text-2xl font-extrabold tracking-tight lg:text-3xl">App TechFlow Mobile</h3>
+              <p class="mt-2 max-w-lg text-sm leading-relaxed text-violet-100">
+                Aplicativo para que os colaboradores acompanhem tarefas, prazos e notificações das equipes direto do celular.
+              </p>
+            </div>
+
+            <div class="relative mt-8">
+              <div class="grid grid-cols-3 gap-3">
+                <div class="rounded-xl bg-white/10 p-3 backdrop-blur">
+                  <p class="text-xs text-violet-100">Tarefas</p>
+                  <p class="mt-1 text-lg font-bold">34/50</p>
+                </div>
+                <div class="rounded-xl bg-white/10 p-3 backdrop-blur">
+                  <p class="text-xs text-violet-100">Sprint</p>
+                  <p class="mt-1 text-lg font-bold">6 de 9</p>
+                </div>
+                <div class="rounded-xl bg-white/10 p-3 backdrop-blur">
+                  <p class="text-xs text-violet-100">Equipe</p>
+                  <p class="mt-1 text-lg font-bold">7 pessoas</p>
+                </div>
+              </div>
+              <div class="mt-5 flex flex-wrap items-center justify-between gap-3 text-sm">
+                <span class="text-violet-100">Resp.: <strong class="text-white">Carla Mendes</strong> · Prazo: <strong class="text-white">15/12/2026</strong></span>
+                <a href="#" class="inline-flex items-center gap-1.5 rounded-xl bg-white px-4 py-2 font-semibold text-violet-700 transition-all duration-200 hover:bg-violet-50 focus:outline-none focus:ring-4 focus:ring-white/40 active:scale-95">
+                  Ver detalhes
+                  <svg class="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" /></svg>
+                </a>
+              </div>
+            </div>
+          </article>
+
+          <!-- Card 2: normal -->
+          <article class="group flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-all duration-300 ease-out hover:-translate-y-1 hover:border-violet-300 hover:shadow-xl hover:shadow-violet-500/10 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-violet-500/50">
+            <div>
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="rounded-full bg-orange-100 px-2.5 py-0.5 text-xs font-semibold text-orange-700 dark:bg-orange-500/15 dark:text-orange-300">Backend</span>
+                <span class="rounded-full bg-rose-100 px-2.5 py-0.5 text-xs font-semibold text-rose-700 dark:bg-rose-500/15 dark:text-rose-300">Alta</span>
+              </div>
+              <h3 class="mt-3 font-bold text-slate-900 transition-colors duration-200 group-hover:text-violet-600 dark:text-white dark:group-hover:text-violet-400">API de Pagamentos</h3>
+              <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Integração com PIX e cartões para o checkout dos clientes.</p>
+            </div>
+            <div class="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-3 text-xs text-slate-500 dark:border-slate-800 dark:text-slate-400">
+              <span>Rafael Souza</span>
+              <span class="flex items-center gap-1">
+                <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" /></svg>
+                30/11/2026
+              </span>
+            </div>
+          </article>
+
+          <!-- Card 3: alto (2 linhas) -->
+          <article class="group flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-all duration-300 ease-out hover:-translate-y-1 hover:border-violet-300 hover:shadow-xl hover:shadow-violet-500/10 md:row-span-2 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-violet-500/50">
+            <div>
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="rounded-full bg-pink-100 px-2.5 py-0.5 text-xs font-semibold text-pink-700 dark:bg-pink-500/15 dark:text-pink-300">Design</span>
+                <span class="rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-700 dark:bg-amber-500/15 dark:text-amber-300">Média</span>
+              </div>
+              <h3 class="mt-3 font-bold text-slate-900 transition-colors duration-200 group-hover:text-violet-600 dark:text-white dark:group-hover:text-violet-400">Design System Flow UI</h3>
+              <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Biblioteca de componentes compartilhada entre os produtos da empresa.</p>
+
+              <p class="mt-5 text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Entregas</p>
+              <ul class="mt-2 flex flex-col gap-2 text-sm">
+                <li class="flex items-center gap-2 text-slate-400 line-through dark:text-slate-500">
+                  <span class="grid h-5 w-5 place-items-center rounded-md bg-emerald-500 text-white"><svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg></span>
+                  Tokens de cor
+                </li>
+                <li class="flex items-center gap-2 text-slate-400 line-through dark:text-slate-500">
+                  <span class="grid h-5 w-5 place-items-center rounded-md bg-emerald-500 text-white"><svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg></span>
+                  Tipografia
+                </li>
+                <li class="flex items-center gap-2 text-slate-700 dark:text-slate-300">
+                  <span class="h-5 w-5 rounded-md border-2 border-slate-300 dark:border-slate-600"></span>
+                  Componentes de formulário
+                </li>
+                <li class="flex items-center gap-2 text-slate-700 dark:text-slate-300">
+                  <span class="h-5 w-5 rounded-md border-2 border-slate-300 dark:border-slate-600"></span>
+                  Documentação
+                </li>
+              </ul>
+            </div>
+            <div class="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-3 text-xs text-slate-500 dark:border-slate-800 dark:text-slate-400">
+              <span>Juliana Prado</span>
+              <span class="flex items-center gap-1">
+                <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" /></svg>
+                20/01/2027
+              </span>
+            </div>
+          </article>
+
+          <!-- Card 4: normal -->
+          <article class="group flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-all duration-300 ease-out hover:-translate-y-1 hover:border-violet-300 hover:shadow-xl hover:shadow-violet-500/10 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-violet-500/50">
+            <div>
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="rounded-full bg-sky-100 px-2.5 py-0.5 text-xs font-semibold text-sky-700 dark:bg-sky-500/15 dark:text-sky-300">Web</span>
+                <span class="rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-700 dark:bg-amber-500/15 dark:text-amber-300">Média</span>
+              </div>
+              <h3 class="mt-3 font-bold text-slate-900 transition-colors duration-200 group-hover:text-violet-600 dark:text-white dark:group-hover:text-violet-400">Portal do Cliente</h3>
+              <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Área logada para o cliente abrir chamados e ver faturas.</p>
+            </div>
+            <div class="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-3 text-xs text-slate-500 dark:border-slate-800 dark:text-slate-400">
+              <span>Bruno Lima</span>
+              <span class="flex items-center gap-1">
+                <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" /></svg>
+                05/11/2026
+              </span>
+            </div>
+          </article>
+
+          <!-- Card 5: largo (2 colunas) -->
+          <article class="group flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-all duration-300 ease-out hover:-translate-y-1 hover:border-violet-300 hover:shadow-xl hover:shadow-violet-500/10 md:col-span-2 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-violet-500/50">
+            <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <div class="flex flex-wrap items-center gap-2">
+                  <span class="rounded-full bg-teal-100 px-2.5 py-0.5 text-xs font-semibold text-teal-700 dark:bg-teal-500/15 dark:text-teal-300">Infraestrutura</span>
+                  <span class="rounded-full bg-rose-100 px-2.5 py-0.5 text-xs font-semibold text-rose-700 dark:bg-rose-500/15 dark:text-rose-300">Alta</span>
+                </div>
+                <h3 class="mt-3 font-bold text-slate-900 transition-colors duration-200 group-hover:text-violet-600 dark:text-white dark:group-hover:text-violet-400">Migração para Nuvem</h3>
+                <p class="mt-1 max-w-md text-sm text-slate-500 dark:text-slate-400">Transferência dos servidores locais para a nuvem com monitoramento automático.</p>
+              </div>
+              <span class="self-start whitespace-nowrap rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300">Em andamento</span>
+            </div>
+            <div class="mt-4 flex flex-wrap gap-3">
+              <div class="min-w-[7rem] flex-1 rounded-xl bg-slate-50 p-3 dark:bg-slate-800/60">
+                <p class="text-xs text-slate-500 dark:text-slate-400">Servidores migrados</p>
+                <p class="mt-1 font-bold text-slate-900 dark:text-white">18 de 24</p>
+              </div>
+              <div class="min-w-[7rem] flex-1 rounded-xl bg-slate-50 p-3 dark:bg-slate-800/60">
+                <p class="text-xs text-slate-500 dark:text-slate-400">Custo mensal</p>
+                <p class="mt-1 font-bold text-emerald-600 dark:text-emerald-400">22% menor</p>
+              </div>
+              <div class="min-w-[7rem] flex-1 rounded-xl bg-slate-50 p-3 dark:bg-slate-800/60">
+                <p class="text-xs text-slate-500 dark:text-slate-400">Disponibilidade</p>
+                <p class="mt-1 font-bold text-slate-900 dark:text-white">99,9%</p>
+              </div>
+            </div>
+            <div class="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-3 text-xs text-slate-500 dark:border-slate-800 dark:text-slate-400">
+              <span>Marcos Azevedo</span>
+              <span class="flex items-center gap-1">
+                <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" /></svg>
+                28/02/2027
+              </span>
+            </div>
+          </article>
+
+          <!-- Card 6: normal -->
+          <article class="group flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-all duration-300 ease-out hover:-translate-y-1 hover:border-violet-300 hover:shadow-xl hover:shadow-violet-500/10 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-violet-500/50">
+            <div>
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="rounded-full bg-cyan-100 px-2.5 py-0.5 text-xs font-semibold text-cyan-700 dark:bg-cyan-500/15 dark:text-cyan-300">Dados</span>
+                <span class="rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">Baixa</span>
+              </div>
+              <h3 class="mt-3 font-bold text-slate-900 transition-colors duration-200 group-hover:text-violet-600 dark:text-white dark:group-hover:text-violet-400">Painel de BI</h3>
+              <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Relatórios de vendas e produtividade para a diretoria.</p>
+            </div>
+            <div class="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-3 text-xs text-slate-500 dark:border-slate-800 dark:text-slate-400">
+              <span>Fernanda Rocha</span>
+              <span class="flex items-center gap-1">
+                <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" /></svg>
+                10/03/2027
+              </span>
+            </div>
+          </article>
+
+          <!-- Card 7: normal (concluído) -->
+          <article class="group flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-all duration-300 ease-out hover:-translate-y-1 hover:border-violet-300 hover:shadow-xl hover:shadow-violet-500/10 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-violet-500/50">
+            <div>
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="rounded-full bg-sky-100 px-2.5 py-0.5 text-xs font-semibold text-sky-700 dark:bg-sky-500/15 dark:text-sky-300">Web</span>
+                <span class="rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">Concluído</span>
+              </div>
+              <h3 class="mt-3 font-bold text-slate-900 transition-colors duration-200 group-hover:text-violet-600 dark:text-white dark:group-hover:text-violet-400">Site Institucional</h3>
+              <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Novo site da TechFlow com blog e página de carreiras.</p>
+            </div>
+            <div class="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-3 text-xs text-slate-500 dark:border-slate-800 dark:text-slate-400">
+              <span>Lucas Martins</span>
+              <span class="flex items-center gap-1">
+                <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" /></svg>
+                30/09/2026
+              </span>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <footer class="mt-12 border-t border-slate-200 pt-6 text-center text-xs text-slate-400 dark:border-slate-800 dark:text-slate-500">
+        TechFlow Dashboard · Checkpoint 5 de FrontEnd Design · FIAP <span id="ano-atual">2026</span>
+      </footer>
+    </main>
+  </div>
+
+  <!-- ===================== MODAL DE NOVO PROJETO ===================== -->
+  <div id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-titulo"
+    class="invisible fixed inset-0 z-50 flex items-end justify-center sm:items-center sm:p-6">
+
+    <div id="modal-overlay" class="absolute inset-0 bg-slate-900/60 opacity-0 backdrop-blur-sm transition-opacity duration-300 ease-out"></div>
+
+    <div id="modal-painel"
+      class="relative max-h-[92vh] w-full translate-y-8 overflow-y-auto rounded-t-3xl bg-white p-6 opacity-0 shadow-2xl transition-all duration-300 ease-out sm:max-w-2xl sm:rounded-3xl sm:p-8 dark:bg-slate-900">
+
+      <!-- Cabeçalho do modal -->
+      <div class="flex items-start justify-between gap-4">
+        <div>
+          <h2 id="modal-titulo" class="text-xl font-extrabold tracking-tight text-slate-900 dark:text-white">Novo projeto</h2>
+          <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">Preencha os dados para cadastrar um projeto.</p>
+        </div>
+        <button type="button" data-fechar-modal aria-label="Fechar"
+          class="rounded-lg p-2 text-slate-400 transition-colors duration-200 hover:bg-slate-100 hover:text-slate-700 focus:outline-none focus:ring-2 focus:ring-violet-500 active:scale-95 dark:hover:bg-slate-800 dark:hover:text-white">
+          <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
+        </button>
+      </div>
+
+      <!-- Alertas do formulário -->
+      <div id="alerta-erro" class="mt-5 hidden items-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-300">
+        <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" /></svg>
+        Confira os campos destacados antes de salvar.
+      </div>
+      <div id="alerta-sucesso" class="mt-5 hidden items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300">
+        <svg class="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
+        Projeto cadastrado com sucesso!
+      </div>
+
+      <!-- Formulário -->
+      <form id="form-projeto" novalidate class="mt-6 grid grid-cols-1 gap-x-5 gap-y-3 sm:grid-cols-2">
+
+        <!-- Nome -->
+        <div data-campo="nome" class="sm:col-span-2">
+          <label for="nome" class="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-200">Nome do projeto</label>
+          <div class="relative">
+            <input id="nome" name="nome" type="text" placeholder="Ex.: Portal do Parceiro" autocomplete="off" data-entrada
+              class="peer w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 pr-10 text-sm text-slate-900 outline-none transition-all duration-200 placeholder:text-slate-400 hover:border-slate-400 focus:border-violet-500 focus:ring-4 focus:ring-violet-500/20 data-[estado=erro]:border-rose-500 data-[estado=ok]:border-emerald-500 data-[estado=erro]:focus:ring-rose-500/20 data-[estado=ok]:focus:ring-emerald-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:hover:border-slate-600 dark:data-[estado=erro]:border-rose-500 dark:data-[estado=ok]:border-emerald-500">
+            <svg class="pointer-events-none absolute right-3 top-1/2 hidden h-5 w-5 -translate-y-1/2 text-emerald-500 peer-data-[estado=ok]:block" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
+            <svg class="pointer-events-none absolute right-3 top-1/2 hidden h-5 w-5 -translate-y-1/2 text-rose-500 peer-data-[estado=erro]:block" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" /></svg>
+          </div>
+          <p data-mensagem class="mt-1.5 min-h-[1.125rem] text-xs font-medium data-[estado=erro]:text-rose-600 data-[estado=ok]:text-emerald-600 dark:data-[estado=erro]:text-rose-400 dark:data-[estado=ok]:text-emerald-400"></p>
+        </div>
+
+        <!-- Responsável -->
+        <div data-campo="responsavel">
+          <label for="responsavel" class="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-200">Responsável</label>
+          <div class="relative">
+            <input id="responsavel" name="responsavel" type="text" list="lista-pessoas" placeholder="Nome de quem lidera" autocomplete="off" data-entrada
+              class="peer w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 pr-10 text-sm text-slate-900 outline-none transition-all duration-200 placeholder:text-slate-400 hover:border-slate-400 focus:border-violet-500 focus:ring-4 focus:ring-violet-500/20 data-[estado=erro]:border-rose-500 data-[estado=ok]:border-emerald-500 data-[estado=erro]:focus:ring-rose-500/20 data-[estado=ok]:focus:ring-emerald-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:hover:border-slate-600 dark:data-[estado=erro]:border-rose-500 dark:data-[estado=ok]:border-emerald-500">
+            <svg class="pointer-events-none absolute right-3 top-1/2 hidden h-5 w-5 -translate-y-1/2 text-emerald-500 peer-data-[estado=ok]:block" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
+            <svg class="pointer-events-none absolute right-3 top-1/2 hidden h-5 w-5 -translate-y-1/2 text-rose-500 peer-data-[estado=erro]:block" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" /></svg>
+          </div>
+          <datalist id="lista-pessoas">
+            <option value="Ana Ribeiro"></option>
+            <option value="Bruno Lima"></option>
+            <option value="Carla Mendes"></option>
+            <option value="Fernanda Rocha"></option>
+            <option value="Juliana Prado"></option>
+            <option value="Lucas Martins"></option>
+            <option value="Marcos Azevedo"></option>
+            <option value="Rafael Souza"></option>
+          </datalist>
+          <p data-mensagem class="mt-1.5 min-h-[1.125rem] text-xs font-medium data-[estado=erro]:text-rose-600 data-[estado=ok]:text-emerald-600 dark:data-[estado=erro]:text-rose-400 dark:data-[estado=ok]:text-emerald-400"></p>
+        </div>
+
+        <!-- Categoria -->
+        <div data-campo="categoria">
+          <label for="categoria" class="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-200">Categoria</label>
+          <div class="relative">
+            <select id="categoria" name="categoria" data-entrada
+              class="peer w-full appearance-none rounded-xl border border-slate-300 bg-white px-4 py-2.5 pr-16 text-sm text-slate-900 outline-none transition-all duration-200 hover:border-slate-400 focus:border-violet-500 focus:ring-4 focus:ring-violet-500/20 data-[estado=erro]:border-rose-500 data-[estado=ok]:border-emerald-500 data-[estado=erro]:focus:ring-rose-500/20 data-[estado=ok]:focus:ring-emerald-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:hover:border-slate-600 dark:data-[estado=erro]:border-rose-500 dark:data-[estado=ok]:border-emerald-500">
+              <option value="">Selecione</option>
+              <option value="Web">Web</option>
+              <option value="Mobile">Mobile</option>
+              <option value="Backend">Backend</option>
+              <option value="Infraestrutura">Infraestrutura</option>
+              <option value="Design">Design</option>
+              <option value="Dados">Dados</option>
+            </select>
+            <svg class="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" /></svg>
+            <svg class="pointer-events-none absolute right-9 top-1/2 hidden h-5 w-5 -translate-y-1/2 text-emerald-500 peer-data-[estado=ok]:block" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
+            <svg class="pointer-events-none absolute right-9 top-1/2 hidden h-5 w-5 -translate-y-1/2 text-rose-500 peer-data-[estado=erro]:block" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" /></svg>
+          </div>
+          <p data-mensagem class="mt-1.5 min-h-[1.125rem] text-xs font-medium data-[estado=erro]:text-rose-600 data-[estado=ok]:text-emerald-600 dark:data-[estado=erro]:text-rose-400 dark:data-[estado=ok]:text-emerald-400"></p>
+        </div>
+
+        <!-- Prazo -->
+        <div data-campo="prazo">
+          <label for="prazo" class="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-200">Prazo</label>
+          <div class="relative">
+            <input id="prazo" name="prazo" type="date" data-entrada
+              class="peer w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 pr-16 text-sm text-slate-900 outline-none transition-all duration-200 hover:border-slate-400 focus:border-violet-500 focus:ring-4 focus:ring-violet-500/20 data-[estado=erro]:border-rose-500 data-[estado=ok]:border-emerald-500 data-[estado=erro]:focus:ring-rose-500/20 data-[estado=ok]:focus:ring-emerald-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:[color-scheme:dark] dark:hover:border-slate-600 dark:data-[estado=erro]:border-rose-500 dark:data-[estado=ok]:border-emerald-500">
+            <svg class="pointer-events-none absolute right-10 top-1/2 hidden h-5 w-5 -translate-y-1/2 text-emerald-500 peer-data-[estado=ok]:block" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
+            <svg class="pointer-events-none absolute right-10 top-1/2 hidden h-5 w-5 -translate-y-1/2 text-rose-500 peer-data-[estado=erro]:block" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" /></svg>
+          </div>
+          <p data-mensagem class="mt-1.5 min-h-[1.125rem] text-xs font-medium data-[estado=erro]:text-rose-600 data-[estado=ok]:text-emerald-600 dark:data-[estado=erro]:text-rose-400 dark:data-[estado=ok]:text-emerald-400"></p>
+        </div>
+
+        <!-- Prioridade (radios estilizados com peer-checked) -->
+        <fieldset data-campo="prioridade" class="group">
+          <legend class="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-200">Prioridade</legend>
+          <div class="grid grid-cols-3 gap-2">
+            <label class="cursor-pointer">
+              <input type="radio" name="prioridade" value="Baixa" class="peer sr-only">
+              <span class="flex items-center justify-center rounded-xl border border-slate-300 px-2 py-2.5 text-sm font-medium text-slate-600 transition-all duration-200 hover:border-emerald-400 group-data-[estado=erro]:border-rose-400 peer-checked:border-emerald-500 peer-checked:bg-emerald-50 peer-checked:text-emerald-700 peer-focus-visible:ring-4 peer-focus-visible:ring-emerald-500/30 peer-active:scale-95 dark:border-slate-700 dark:text-slate-300 dark:peer-checked:border-emerald-500 dark:peer-checked:bg-emerald-500/15 dark:peer-checked:text-emerald-300">Baixa</span>
+            </label>
+            <label class="cursor-pointer">
+              <input type="radio" name="prioridade" value="Média" class="peer sr-only">
+              <span class="flex items-center justify-center rounded-xl border border-slate-300 px-2 py-2.5 text-sm font-medium text-slate-600 transition-all duration-200 hover:border-amber-400 group-data-[estado=erro]:border-rose-400 peer-checked:border-amber-500 peer-checked:bg-amber-50 peer-checked:text-amber-700 peer-focus-visible:ring-4 peer-focus-visible:ring-amber-500/30 peer-active:scale-95 dark:border-slate-700 dark:text-slate-300 dark:peer-checked:border-amber-500 dark:peer-checked:bg-amber-500/15 dark:peer-checked:text-amber-300">Média</span>
+            </label>
+            <label class="cursor-pointer">
+              <input type="radio" name="prioridade" value="Alta" class="peer sr-only">
+              <span class="flex items-center justify-center rounded-xl border border-slate-300 px-2 py-2.5 text-sm font-medium text-slate-600 transition-all duration-200 hover:border-rose-400 group-data-[estado=erro]:border-rose-400 peer-checked:border-rose-500 peer-checked:bg-rose-50 peer-checked:text-rose-700 peer-focus-visible:ring-4 peer-focus-visible:ring-rose-500/30 peer-active:scale-95 dark:border-slate-700 dark:text-slate-300 dark:peer-checked:border-rose-500 dark:peer-checked:bg-rose-500/15 dark:peer-checked:text-rose-300">Alta</span>
+            </label>
+          </div>
+          <p data-mensagem class="mt-1.5 min-h-[1.125rem] text-xs font-medium data-[estado=erro]:text-rose-600 data-[estado=ok]:text-emerald-600 dark:data-[estado=erro]:text-rose-400 dark:data-[estado=ok]:text-emerald-400"></p>
+        </fieldset>
+
+        <!-- Descrição -->
+        <div data-campo="descricao" class="sm:col-span-2">
+          <div class="mb-1.5 flex items-center justify-between">
+            <label for="descricao" class="block text-sm font-semibold text-slate-700 dark:text-slate-200">Descrição</label>
+            <span id="contador-descricao" class="text-xs text-slate-400">0/300</span>
+          </div>
+          <textarea id="descricao" name="descricao" rows="4" maxlength="300" placeholder="Explique o objetivo do projeto e o que será entregue." data-entrada
+            class="peer w-full resize-none rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm text-slate-900 outline-none transition-all duration-200 placeholder:text-slate-400 hover:border-slate-400 focus:border-violet-500 focus:ring-4 focus:ring-violet-500/20 data-[estado=erro]:border-rose-500 data-[estado=ok]:border-emerald-500 data-[estado=erro]:focus:ring-rose-500/20 data-[estado=ok]:focus:ring-emerald-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:hover:border-slate-600 dark:data-[estado=erro]:border-rose-500 dark:data-[estado=ok]:border-emerald-500"></textarea>
+          <p data-mensagem class="mt-1 min-h-[1.125rem] text-xs font-medium data-[estado=erro]:text-rose-600 data-[estado=ok]:text-emerald-600 dark:data-[estado=erro]:text-rose-400 dark:data-[estado=ok]:text-emerald-400"></p>
+        </div>
+
+        <!-- Botões -->
+        <div class="flex flex-col-reverse gap-3 pt-2 sm:col-span-2 sm:flex-row sm:justify-end">
+          <button type="button" data-fechar-modal
+            class="rounded-xl border border-slate-300 px-5 py-2.5 text-sm font-semibold text-slate-700 transition-all duration-200 hover:bg-slate-100 focus:outline-none focus:ring-4 focus:ring-slate-400/20 active:scale-95 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800">
+            Cancelar
+          </button>
+          <button id="botao-salvar" type="submit"
+            class="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-violet-500/30 transition-all duration-200 ease-out hover:shadow-xl hover:shadow-violet-500/40 focus:outline-none focus:ring-4 focus:ring-violet-500/40 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60 disabled:shadow-none disabled:active:scale-100">
+            <svg id="icone-carregando" class="hidden h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 0 1 8-8v4a4 4 0 0 0-4 4H4z"></path></svg>
+            <span id="texto-salvar">Salvar projeto</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===================== TOAST DE CONFIRMAÇÃO ===================== -->
+  <div id="toast" role="status" aria-live="polite"
+    class="pointer-events-none fixed bottom-4 left-4 right-4 z-[60] flex translate-y-6 items-center gap-3 rounded-2xl bg-slate-900 px-4 py-3 text-sm font-medium text-white opacity-0 shadow-2xl transition-all duration-300 ease-out sm:left-auto sm:max-w-sm dark:bg-white dark:text-slate-900">
+    <span class="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-emerald-500 text-white">
+      <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="3" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" /></svg>
+    </span>
+    <span id="toast-texto">Projeto adicionado!</span>
+  </div>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
