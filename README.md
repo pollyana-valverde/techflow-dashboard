@@ -95,7 +95,7 @@ techflow-dashboard/
 
 ## Link do GitHub
 
-[https://github.com/SEU-USUARIO/techflow-dashboard](https://github.com/SEU-USUARIO/techflow-dashboard)
+[https://github.com/pollyana-valverde/techflow-dashboard](https://github.com/pollyana-valverde/techflow-dashboard)
 
 ## Dificuldades encontradas
 
